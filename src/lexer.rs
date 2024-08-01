@@ -33,12 +33,8 @@ main:void(){
 */
 
 
-use std::io::{self, Write};
 use std::iter::Peekable;
 use std::str::Chars;
-use std::fs::File;
-use std::fs::*;
-use std::fmt;
 
 use crate::Token;
 

@@ -6,10 +6,7 @@ mod interpriter;
 pub mod token;
 
 use std::io::{self, Write};
-use std::iter::Peekable;
-use std::str::Chars;
-use std::fs::File;
-use std::{fs::*, vec};
+use std::fs::*;
 
 use interpriter::interpret;
 use lexer::{Lexer};
@@ -41,6 +38,7 @@ fn main() {
         if token == Token::Eof {
             break;
         }
+        println!("{:?}", token);
         tokens.push(token);
     }
     interpret(tokens);

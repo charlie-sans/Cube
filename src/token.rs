@@ -1,10 +1,9 @@
 
 use std::{iter::Peekable, str::Chars};
 
-use crate::lexer::Lexer;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     // Data types
     Int,
@@ -56,6 +55,7 @@ pub struct Tokenizer<'a> {
     input: Peekable<Chars<'a>>,
 }
 
+
 impl<'a> Tokenizer<'a> {
     pub fn new(input: &'a str) -> Self {
         Tokenizer {
@@ -65,7 +65,6 @@ impl<'a> Tokenizer<'a> {
 
     fn read_identifier(&mut self, first: char) -> String {
         let mut ident = String::new();
-
 
         while let Some(&c) = self.input.peek() {
             if c.is_alphanumeric() || c == '_' {
@@ -77,6 +76,55 @@ impl<'a> Tokenizer<'a> {
         }
 
         ident
+    }
+}
+
+impl std::fmt::Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let binding: &str = "binding";
+        let token_str = match self {
+            Token::Int => "Int",
+            Token::Float => "Float",
+            Token::Str => "Str",
+            Token::Bool => "Bool",
+            Token::Void => "Void",
+            Token::If => "If",
+            Token::Else => "Else",
+            Token::While => "While",
+            Token::For => "For",
+            Token::Print => "Print",
+            Token::Plus => "Plus",
+            Token::Minus => "Minus",
+            Token::Multiply => "Multiply",
+            Token::Divide => "Divide",
+            Token::Modulo => "Modulo",
+            Token::Equals => "Equals",
+            Token::NotEquals => "NotEquals",
+            Token::LessThan => "LessThan",
+            Token::GreaterThan => "GreaterThan",
+            Token::LessThanOrEqual => "LessThanOrEqual",
+            Token::GreaterThanOrEqual => "GreaterThanOrEqual",
+            Token::And => "And",
+            Token::Or => "Or",
+            Token::Empty => "Empty",
+            Token::Not => "Not",
+            Token::Colon => "Colon",
+            Token::Semicolon => "Semicolon",
+            Token::NewLine => "NewLine",
+            Token::Comma => "Comma",
+            Token::LeftParen => "LeftParen",
+            Token::RightParen => "RightParen",
+            Token::LeftBrace => "LeftBrace",
+            Token::RightBrace => "RightBrace",
+            Token::Identifier(ident) => ident,
+            Token::Integer(i) => &binding,
+            Token::CFloat(f) => &binding,
+            
+            Token::String(s) => s,
+            Token::Eof => "Eof",
+        };
+
+        write!(f, "{}", token_str)
     }
 }
 
