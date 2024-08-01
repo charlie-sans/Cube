@@ -1,7 +1,7 @@
 // cube, a programming language that is inspired by Rust and Python
 
 mod lexer;
-mod parser;
+
 mod interpriter;
 pub mod token;
 
@@ -41,7 +41,7 @@ fn main() {
         println!("{:?}", token);
         tokens.push(token);
     }
-    interpret(tokens);
+   // interpret(tokens);
 
    
 }

@@ -1,7 +1,7 @@
 main:void()
 {
-    a:int = 1;
-    b:str = "cat";
-    print(a);
+    a:int = 5;
+    b:bool = true;
     print(b);
+    print(a);
 }

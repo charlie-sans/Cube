@@ -64,7 +64,30 @@ impl<'a> Lexer<'a> {
 
         ident
     }
+    fn read_function(&mut self) -> Token {
+        let mut ident = String::new();
+        let mut tokens: Vec<Token> = Vec::new();
+        while let Some(&c) = self.input.peek() {
+            if c == '(' {
+                self.input.next();
+                break;
+            } else {
+                ident.push(c);
+                self.input.next();
+            }
+        }
 
+        while let Some(&c) = self.input.peek() {
+            if c == ')' {
+                self.input.next();
+                break;
+            } else {
+                tokens.push(self.next().unwrap());
+            }
+        }
+
+        Token::Function(ident, tokens)
+    }
     fn read_number(&mut self, first_char: char) -> Token {
         let mut num_str = String::new();
 
@@ -94,7 +117,19 @@ impl<'a> Lexer<'a> {
         while let Some(c) = self.input.next() {
             if c == '"' {
                 break;
-            } else {
+            }
+            else if c == '\\' {
+                if let Some(c) = self.input.next() {
+                    match c {
+                        'n' => str_literal.push('\n'),
+                        't' => str_literal.push('\t'),
+                        '\\' => str_literal.push('\\'),
+                        '"' => str_literal.push('"'),
+                        _ => str_literal.push(c),
+                    }
+                }
+            } 
+            else {
                 str_literal.push(c);
             }
         }
@@ -107,10 +142,13 @@ impl<'a> Iterator for Lexer<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
+
+        
+
         while let Some(&c) = self.input.peek() {
             if c == '\n' {
                 self.input.next();
-                return Some(Token::NewLine);
+                //return Some(Token::NewLine);
             }
             if c == '\r' {
                 self.input.next();
