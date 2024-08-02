@@ -41,6 +41,7 @@ fn main() {
         println!("{:?}", token);
         tokens.push(token);
     }
+    println!("these are our tokens{:?}", tokens);
     interpret(tokens);
 
    

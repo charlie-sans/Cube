@@ -1,5 +1,3 @@
-
-
 use crate::Token;
 
 fn print_f(msg: &str) {
@@ -8,7 +6,7 @@ fn print_f(msg: &str) {
 //𓎢𓄿𓈖 𓇌𓅲 𓅲𓈖𓂧𓂋𓋴𓏏𓄿𓈖𓂧 𓅓?
 pub fn interpret(tokens: Vec<Token>) {
    let mut i = 0;
-   let mut varibles = Vec::new();
+let mut variables = Vec::new();
    let mut objects: Vec<(String, String)> = Vec::new();
    let mut functions: Vec<(String, Vec<Token>)> = Vec::new();
    let mut classes: Vec<(String, Vec<Token>)> = Vec::new();
@@ -16,6 +14,7 @@ pub fn interpret(tokens: Vec<Token>) {
  
 
     while i < tokens.len() {
+        println!("TOKEN {:?}", tokens[i]);
          match tokens[i] {
                 Token::NewLine => {
                     i += 1;
@@ -36,25 +35,25 @@ pub fn interpret(tokens: Vec<Token>) {
                                                 Token::Integer(ref int) => {
                                                     // if the token is a int folowed by a semicolon
                                                     if tokens[i + 1] == Token::Semicolon {
-                                                        varibles.push((ident.clone(), int.to_string()));
+                                                        variables.push((ident.clone(), int.to_string()));
                                                         break;
                                                     } else {
-                                                        panic!("Expected a semicolon after the integer");
+                                                        panic!("Expected a semicolon after the integer at line {}", i);
                                                     }
                                                 },
                                                 Token::String(ref string) => {
                                                   if tokens[i + 1] == Token::Semicolon {
-                                                        varibles.push((ident.clone(), string.clone()));
+                                                        variables.push((ident.clone(), string.clone()));
                                                         break;
                                                     } else {
-                                                        panic!("Expected a semicolon after the string");
+                                                        panic!("Expected a semicolon after the string at line {}", i);
                                                     }
                                                 },
                                                 Token::CFloat(ref float) => {
                                                     if tokens[i - 2] == Token::Float || tokens[i - 3] == Token::Semicolon {
-                                                        varibles.push((ident.clone(), float.to_string()));
+                                                        variables.push((ident.clone(), float.to_string()));
                                                     } else {
-                                                        panic!("Expected a float after equals and a semicolon after the float");
+                                                        panic!("Expected a float after equals and a semicolon after the float at line {}", i);
                                                     }
                                                 },
                                                 
@@ -123,21 +122,26 @@ pub fn interpret(tokens: Vec<Token>) {
                 },
                 Token::Print => {
                 i += 1;
+                println!("FUCK {:?}", tokens[i]);
                 match tokens[i] {
                      Token::String(ref msg) => {
                           print_f(msg);
                      },
                      Token::Identifier(ref ident) => {
-                          print_f(ident);
+                        print_f(ident);
+                         //check to see if the identifier has been added to the list of varibles
+                            if variables.contains(&(ident.clone(), ident.clone())) {
+                                println!("{}", variables.iter().find(|(x, _)| x == ident).unwrap().1);
+                            } else {
+                                panic!("Identifier {:?} not found at line {}", tokens[i], i);
+                            }
                      },
                     
                      _ => {
                           panic!("Expected a string or identifier after print {:?} at line {}", tokens[i], i);
                      }
                      // should end with a right parenthesis
-                     Token::RightParen => {
-                          i += 1;
-                     },
+                   
                 }
                 i += 1;
               },
@@ -147,7 +151,7 @@ pub fn interpret(tokens: Vec<Token>) {
          }
          i += 1;
     }
-    println!("{:?}", varibles);
-    println!("{:?}", objects);
+    println!("Var {:?}", variables);
+    println!("Object {:?}", objects);
     
 }

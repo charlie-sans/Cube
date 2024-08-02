@@ -128,6 +128,27 @@ impl std::fmt::Display for Token {
     }
 }
 
+
+pub enum ParsedToken {
+    Int(i32),
+    Float(f64),
+    Str(String),
+    Bool(bool),
+    Void,
+    Identifier(String),
+    Function(String, Vec<Token>),
+    FunctionCall(String, Vec<Token>),
+    If(Vec<Token>, Vec<Token>),
+    Else(Vec<Token>),
+    While(Vec<Token>),
+    For(Vec<Token>, Vec<Token>, Vec<Token>, Vec<Token>),
+    Print(String),
+    Return(Token),
+    Assignment(String, Token),
+    Expression(Vec<Token>),
+    Empty,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -140,3 +161,4 @@ mod tests {
         assert_eq!(ident, "hello");
     }
 }
+

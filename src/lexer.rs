@@ -110,15 +110,15 @@ impl<'a> Iterator for Lexer<'a> {
         while let Some(&c) = self.input.peek() {
             if c == '\n' {
                 self.input.next();
-                return Some(Token::NewLine);
+              
             }
             if c == '\r' {
                 self.input.next();
-                return Some(Token::NewLine);
+               
             }
             if c == '\t' {
                 self.input.next();
-                return Some(Token::NewLine);
+             
             }
 
 
@@ -206,14 +206,14 @@ impl<'a> Iterator for Lexer<'a> {
                         return None;
                     }
                 }
-                '(' => {
-                    self.input.next();
-                    return Some(Token::LeftParen);
-                }
-                ')' => {
-                    self.input.next();
-                    return Some(Token::RightParen);
-                }
+                // '(' => {
+                //     self.input.next();
+                //     return Some(Token::LeftParen);
+                // }
+                // ')' => {
+                //     self.input.next();
+                //     return Some(Token::RightParen);
+                // }
                 '{' => {
                     self.input.next();
                     return Some(Token::LeftBrace);
