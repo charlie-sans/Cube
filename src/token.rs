@@ -1,152 +1,93 @@
+// token.rs
 
-use std::{iter::Peekable, str::Chars};
-#[derive(Debug, PartialEq, Clone)]
-pub enum ASTNode {
-    Statement(Vec<ASTNode>),
-    Expression(String, Vec<ASTNode>),
-    Function(String, Vec<Token>,Vec<ASTNode>),
-    Varible(String, Vec<ASTNode>),
-    Class(String, Vec<ASTNode>),
-
-}
+use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
-    // Data types
-    Int,
-    Float,
-    Str,
-    Bool,
-    Void,
-    // Keywords
-    If,
-    Else,
-    While,
-    For,
-    Print,
-    // Operators
-    Plus,
-    Minus,
-    Multiply,
-    Divide,
-    Modulo,
-    Equals,
-    NotEquals,
-    LessThan,
-    GreaterThan,
-    LessThanOrEqual,
-    GreaterThanOrEqual,
-    And,
-    Or,
-    Empty,
-    Not,
-    // Symbols
-    Colon,
-    Semicolon,
-    NewLine,
-
-    Comma,
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
-    // Literals
     Identifier(String),
-    Integer(i32),
-    CFloat(f64),
+    Number(f64),
+    Function(String, Vec<Token>),
+    Operator(String),
+    Keyword(String),
     String(String),
-    Function(String, Vec<Token>,Vec<Token>),
-    Varible(String, Vec<Token>),
-    class(String, Vec<Token>),
-    // End of file
-    Eof,
+    Boolean(bool),
+    Int(i32),
+    Float(f64),
+    Void,
+    SemiColon,
+    
+    EOF,
 }
-pub struct Tokenizer<'a> {
-    input: Peekable<Chars<'a>>,
-}
 
-
-impl<'a> Tokenizer<'a> {
-    pub fn new(input: &'a str) -> Self {
-        Tokenizer {
-            input: input.chars().peekable(),
-        }
-    }
-
-    fn read_identifier(&mut self, first: char) -> String {
-        let mut ident = String::new();
-
-        while let Some(&c) = self.input.peek() {
-            if c.is_alphanumeric() || c == '_' {
-                ident.push(c);
-                self.input.next();
-            } else {
-                break;
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Token::Identifier(ident) => write!(f, "Identifier: {}", ident),
+            Token::Number(num) => write!(f, "Number: {}", num),
+            Token::Function(ident, tokens) => {
+                write!(f, "Function: {}(", ident)?;
+                for token in tokens {
+                    write!(f, "{}, ", token)?;
+                }
+                write!(f, ")")
             }
+            Token::Operator(op) => write!(f, "Operator: {}", op),
+            Token::Keyword(kw) => write!(f, "Keyword: {}", kw),
+            Token::String(s) => write!(f, "String: {}", s),
+            Token::Boolean(b) => write!(f, "Boolean: {}", b),
+            Token::EOF => write!(f, "EOF"),
+            Token::Int(i) => write!(f, "Int: {}", i),
+            Token::Float(fl) => write!(f, "Float: {}", fl),
+            Token::Void => write!(f, "Void"),
+            Token::SemiColon => write!(f, "SemiColon"),
         }
-
-        ident
     }
 }
 
-impl std::fmt::Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let binding: &str = "binding";
-        let token_str = match self {
-            Token::Int => "Int",
-            Token::Float => "Float",
-            Token::Str => "Str",
-            Token::Bool => "Bool",
-            Token::Void => "Void",
-            Token::If => "If",
-            Token::Else => "Else",
-            Token::While => "While",
-            Token::For => "For",
-            Token::Print => "Print",
-            Token::Plus => "Plus",
-            Token::Minus => "Minus",
-            Token::Multiply => "Multiply",
-            Token::Divide => "Divide",
-            Token::Modulo => "Modulo",
-            Token::Equals => "Equals",
-            Token::NotEquals => "NotEquals",
-            Token::LessThan => "LessThan",
-            Token::GreaterThan => "GreaterThan",
-            Token::LessThanOrEqual => "LessThanOrEqual",
-            Token::GreaterThanOrEqual => "GreaterThanOrEqual",
-            Token::And => "And",
-            Token::Or => "Or",
-            Token::Empty => "Empty",
-            Token::Not => "Not",
-            Token::Colon => "Colon",
-            Token::Semicolon => "Semicolon",
-            Token::NewLine => "NewLine",
-            Token::Comma => "Comma",
-            Token::LeftParen => "LeftParen",
-            Token::RightParen => "RightParen",
-            Token::LeftBrace => "LeftBrace",
-            Token::RightBrace => "RightBrace",
-            Token::Identifier(ident) => ident,
-            Token::Integer(i) => &binding,
-            Token::CFloat(f) => &binding,
-            _ => "Unknown",            
-            Token::String(s) => s,
-            Token::Eof => "Eof",
-        };
+pub fn is_keyword(ident: &str) -> bool {
+    match ident {
+        "if" | "else" | "for" | "while" | "return" | "void" | "int" | "float" | "str" | "bool" => true,
+        _ => false,
+    }
+}
+#[derive(Debug, PartialEq, Clone)]
+pub enum ASTNode {
+    Function(String, Vec<ASTNode>),
+    Number(f64),
+    Identifier(String),
+    Operator(String),
+    Keyword(String),
+    String(String),
+    Boolean(bool),
+    Int(i32),
+    Float(f64),
+    Void,
+    SemiColon,
+    EOF,
+}
 
-        write!(f, "{}", token_str)
+impl fmt::Display for ASTNode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ASTNode::Identifier(ident) => write!(f, "Identifier: {}", ident),
+            ASTNode::Number(num) => write!(f, "Number: {}", num),
+            ASTNode::Function(ident, tokens) => {
+                write!(f, "Function: {}(", ident)?;
+                for token in tokens {
+                    write!(f, "{}, ", token)?;
+                }
+                write!(f, ")")
+            }
+            ASTNode::Operator(op) => write!(f, "Operator: {}", op),
+            ASTNode::Keyword(kw) => write!(f, "Keyword: {}", kw),
+            ASTNode::String(s) => write!(f, "String: {}", s),
+            ASTNode::Boolean(b) => write!(f, "Boolean: {}", b),
+            ASTNode::Int(i) => write!(f, "Int: {}", i),
+            ASTNode::Float(fl) => write!(f, "Float: {}", fl),
+            ASTNode::Void => write!(f, "Void"),
+            ASTNode::SemiColon => write!(f, "SemiColon"),
+            ASTNode::EOF => write!(f, "EOF"),
+        }
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_read_identifier() {
-        let input = "hello";
-        let mut tokenizer = Tokenizer::new(input);
-        let ident = tokenizer.read_identifier('h');
-        assert_eq!(ident, "hello");
-    }
-}

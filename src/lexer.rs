@@ -1,4 +1,10 @@
-//lexer for the cube programming language
+// lexer.rs for cube
+// also acts as tokeniser
+
+use std::fmt;
+use std::iter::Peekable;
+use std::str::Chars;
+use crate::token::{Token, is_keyword, ASTNode};
 
 /*  
 example
@@ -14,29 +20,21 @@ main:void(){
     print(z);
     for (i: int = 0; i < 10; i++){
         print(i);
-    }
-    if (x === 5){
-        print("x is 5");
-    }
-    else{
-        print("x is not 5");
-    }
+        }
+        if (x === 5){
+            print("x is 5");
+            }
+            else{
+                print("x is not 5");
+                }
     while (x < 10){
         print(x);
         x = x + 1;
+        }
+        
     }
-    
-}
+    */
 
-
-
-*/
-
-
-use std::iter::Peekable;
-use std::str::Chars;
-
-use crate::Token;
 
 pub struct Lexer<'a> {
     input: Peekable<Chars<'a>>,
@@ -44,264 +42,338 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
-        Lexer { 
+        Lexer {
             input: input.chars().peekable(),
         }
     }
 
-    fn read_identifier(&mut self, first_char: char) -> String {
-        let mut ident = String::new();
-       
+    fn consume(&mut self) -> Option<char> {
+        self.input.next()
+    }
 
-        while let Some(&c) = self.input.peek() {
-            if c.is_alphanumeric() || c == '_' {
-                ident.push(c);
-                self.input.next();
+    fn peek(&mut self) -> Option<&char> {
+        self.input.peek()
+    }
+
+    fn consume_whitespace(&mut self) {
+        while let Some(&c) = self.peek() {
+            if c.is_whitespace() {
+                self.consume();
             } else {
                 break;
             }
         }
+    }
 
+    fn consume_identifier(&mut self) -> String {
+        let mut ident = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_alphanumeric() {
+                ident.push(c);
+                self.consume();
+            } else {
+                break;
+            }
+        }
         ident
     }
-    fn read_function(&mut self) -> Token {
-        let mut ident = String::new();
-        let mut tokens: Vec<Token> = Vec::new();
-        while let Some(&c) = self.input.peek() {
-            if c == '(' {
-                self.input.next();
-                break;
-            } else {
-                ident.push(c);
-                self.input.next();
-            }
-        }
 
-        while let Some(&c) = self.input.peek() {
-            if c == ')' {
-                self.input.next();
-                break;
-            } else {
-                tokens.push(self.next().unwrap());
-            }
-        }
-
-        Token::Function(ident, tokens)
-    }
-    fn read_number(&mut self, first_char: char) -> Token {
+    fn consume_number(&mut self) -> f64 {
         let mut num_str = String::new();
-
-
-        while let Some(&c) = self.input.peek() {
+        while let Some(&c) = self.peek() {
             if c.is_numeric() || c == '.' {
                 num_str.push(c);
-                self.input.next();
+                self.consume();
             } else {
                 break;
             }
         }
+        num_str.parse().unwrap()
+    }
 
-        if num_str.contains('.') {
-            println!("float");
-            Token::Empty
-            
-        } else {
-            Token::Integer(num_str.parse().unwrap())
-        }
-    }   
-
-    fn read_string(&mut self) -> String {
-        let mut str_literal = String::new();
-        self.input.next();
-
-        while let Some(c) = self.input.next() {
+    fn consume_string(&mut self) -> String {
+        let mut s = String::new();
+        self.consume(); // consume the opening quote
+        while let Some(&c) = self.peek() {
             if c == '"' {
+                self.consume();
+                break;
+            } else {
+                s.push(c);
+                self.consume();
+            }
+        }
+        s
+    }
+
+    fn consume_boolean(&mut self) -> bool {
+        let mut b = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_alphabetic() {
+                b.push(c);
+                self.consume();
+            } else {
                 break;
             }
-            else if c == '\\' {
-                if let Some(c) = self.input.next() {
-                    match c {
-                        'n' => str_literal.push('\n'),
-                        't' => str_literal.push('\t'),
-                        '\\' => str_literal.push('\\'),
-                        '"' => str_literal.push('"'),
-                        _ => str_literal.push(c),
-                    }
-                }
-            } 
-            else {
-                str_literal.push(c);
+        }
+        match b.as_str() {
+            "true" => true,
+            "false" => false,
+            _ => panic!("Expected boolean"),
+        }
+    }
+
+    fn consume_keyword(&mut self) -> String {
+        let mut kw = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_alphabetic() {
+                kw.push(c);
+                self.consume();
+            } else {
+                break;
             }
         }
-
-        str_literal
+        kw
     }
-}
 
-impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-
-        
-
-        while let Some(&c) = self.input.peek() {
-            if c == '\n' {
-                self.input.next();
-                //return Some(Token::NewLine);
+    fn consume_operator(&mut self) -> String {
+        let mut op = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_ascii_punctuation() {
+                op.push(c);
+                self.consume();
+            } else {
+                break;
             }
-            if c == '\r' {
-                self.input.next();
-                return Some(Token::NewLine);
-            }
-            if c == '\t' {
-                self.input.next();
-                return Some(Token::NewLine);
-            }
+        }
+        op
+    }
 
+    fn consume_type(&mut self) -> String {
+        let mut ty = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_alphabetic() {
+                ty.push(c);
+                self.consume();
+            } else {
+                break;
+            }
+        }
+        ty
+    }
 
+    fn consume_int(&mut self) -> i32 {
+        let mut num_str = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_numeric() {
+                num_str.push(c);
+                self.consume();
+            } else {
+                break;
+            }
+        }
+        num_str.parse().unwrap()
+    }
+
+    fn consume_float(&mut self) -> f64 {
+        let mut num_str = String::new();
+        while let Some(&c) = self.peek() {
+            if c.is_numeric() || c == '.' {
+                num_str.push(c);
+                self.consume();
+            } else {
+                break;
+            }
+        }
+        num_str.parse().unwrap()
+    }
+
+    fn consume_void(&mut self) {
+        let void = "void";
+        for c in void.chars() {
+            match self.peek() {
+                Some(&ch) if ch == c => {
+                    self.consume();
+                }
+                _ => panic!("Expected void"),
+            }
+        }
+    }
+
+    pub fn lex(&mut self) -> Vec<Token> {
+        let mut tokens = Vec::new();
+        while let Some(&c) = self.peek() {
             match c {
-                ' ' | '\n' | '\t' => {
-                    self.input.next();
-                }
-                '0'..='9' => {
-                    return Some(self.read_number(c));
-                }
-                '"' => {
-                    return Some(Token::String(self.read_string()));
-                }
-                '+' => {
-                    self.input.next();
-                    return Some(Token::Plus);
-                }
-                '-' => {
-                    self.input.next();
-                    return Some(Token::Minus);
-                }
-                '*' => {
-                    self.input.next();
-                    return Some(Token::Multiply);
-                }
-                '/' => {
-                    self.input.next();
-                    return Some(Token::Divide);
-                }
-                '%' => {
-                    self.input.next();
-                    return Some(Token::Modulo);
-                }
-                '=' => {
-                    self.input.next();
-                    if let Some(&'=') = self.input.peek() {
-                        self.input.next();
-                        return Some(Token::Equals);
-                    } else {
-                        return Some(Token::Equals);
-                    }
-                }
-                '!' => {
-                    self.input.next();
-                    if let Some(&'=') = self.input.peek() {
-                        self.input.next();
-                        return Some(Token::NotEquals);
-                    } else {
-                        return Some(Token::Not);
-                    }
-                }
-                '<' => {
-                    self.input.next();
-                    if let Some(&'=') = self.input.peek() {
-                        self.input.next();
-                        return Some(Token::LessThanOrEqual);
-                    } else {
-                        return Some(Token::LessThan);
-                    }
-                }
-                '>' => {
-                    self.input.next();
-                    if let Some(&'=') = self.input.peek() {
-                        self.input.next();
-                        return Some(Token::GreaterThanOrEqual);
-                    } else {
-                        return Some(Token::GreaterThan);
-                    }
-                }
-                '&' => {
-                    self.input.next();
-                    if let Some(&'&') = self.input.peek() {
-                        self.input.next();
-                        return Some(Token::And);
-                    } else {
-                        return None;
-                    }
-                }
-                '|' => {
-                    self.input.next();
-                    if let Some(&'|') = self.input.peek() {
-                        self.input.next();
-                        return Some(Token::Or);
-                    } else {
-                        return None;
-                    }
-                }
-                '(' => {
-                    self.input.next();
-                    return Some(Token::LeftParen);
-                }
-                ')' => {
-                    self.input.next();
-                    return Some(Token::RightParen);
-                }
-                '{' => {
-                    self.input.next();
-                    return Some(Token::LeftBrace);
-                }
-                '}' => {
-                    self.input.next();
-                    return Some(Token::RightBrace);
+                ' ' => {
+                    self.consume();
                 }
                 ':' => {
-                    self.input.next();
-                    return Some(Token::Colon);
+                    self.consume();
+                    tokens.push(Token::Operator(":".to_string()));
+                }
+                '=' => {
+                    self.consume();
+                    tokens.push(Token::Operator("=".to_string()));
+                }
+                '(' => {
+                    self.consume();
+                    tokens.push(Token::Operator("(".to_string()));
+                }
+                ')' => {
+                    self.consume();
+                    tokens.push(Token::Operator(")".to_string()));
+                }
+                '{' => {
+                    self.consume();
+                    tokens.push(Token::Operator("{".to_string()));
+                }
+                '}' => {
+                    self.consume();
+                    tokens.push(Token::Operator("}".to_string()));
                 }
                 ';' => {
-                    self.input.next();
-                    return Some(Token::Semicolon);
+                    self.consume();
+                    tokens.push(Token::Operator(";".to_string()));
                 }
                 ',' => {
-                    self.input.next();
-                    return Some(Token::Comma);
+                    self.consume();
+                    tokens.push(Token::Operator(",".to_string()));
+                }
+                '+' => {
+                    self.consume();
+                    tokens.push(Token::Operator("+".to_string()));
+                }
+                '-' => {
+                    self.consume();
+                    tokens.push(Token::Operator("-".to_string()));
+                }
+                '*' => {
+                    self.consume();
+                    tokens.push(Token::Operator("*".to_string()));
+                }
+                '/' => {
+                    self.consume();
+                    tokens.push(Token::Operator("/".to_string()));
+                }
+                '<' => {
+                    self.consume();
+                    tokens.push(Token::Operator("<".to_string()));
+                }
+                '>' => {
+                    self.consume();
+                    tokens.push(Token::Operator(">".to_string()));
+                }
+                '!' => {
+                    self.consume();
+                    tokens.push(Token::Operator("!".to_string()));
+                }
+                '&' => {
+                    self.consume();
+                    tokens.push(Token::Operator("&".to_string()));
+                }
+                '|' => {
+                    self.consume();
+                    tokens.push(Token::Operator("|".to_string()));
+                }
+                '"' => {
+                    tokens.push(Token::String(self.consume_string()));
                 }
                 _ => {
                     if c.is_alphabetic() {
-                        let ident = self.read_identifier(c);
-                        match ident.as_str() {
-                            "int" => return Some(Token::Int),
-                            "float" => return Some(Token::Float),
-                            "str" => return Some(Token::Str),
-                            "bool" => return Some(Token::Bool),
-                            "void" => return Some(Token::Void),
-                            "if" => return Some(Token::If),
-                            "else" => return Some(Token::Else),
-                            "while" => return Some(Token::While),
-                            "for" => return Some(Token::For),
-                            "print" => {
-                                self.input.next();
-                                return Some(Token::Print)
-                            
-                            }
-                            _ => return Some(Token::Identifier(ident)),
+                        let ident = self.consume_identifier();
+                        if is_keyword(&ident) {
+                            tokens.push(Token::Keyword(ident));
+                        } else {
+                            tokens.push(Token::Identifier(ident));
+                        }
+                    } else if c.is_numeric() {
+                        let num = self.consume_number();
+                        if num as f64 == num {
+                            tokens.push(Token::Int(num as i32));
+                        } else {
+                            tokens.push(Token::Float(num));
                         }
                     } else {
-                        return None;
+                        self.consume();
                     }
+
                 }
             }
         }
-
-        Some (Token::Eof)
+        tokens.push(Token::EOF);
+        tokens
     }
 }
 
+pub fn interpret(ast: &ASTNode) {
+    match ast {
+        ASTNode::Function(ident, nodes) => {
+            match ident.as_str() {
+                "main" => {
+                    println!("fn main() {{");
+                    for node in nodes {
+                        interpret(node);
+                    }
+                    println!("}}");
+                }
+                "print" => {
+                    println!("println!({});", nodes[0]);
+                }
+                "if" => {
+                    println!("if {} {{", nodes[0]);
+                    interpret(&nodes[1]);
+                    println!("}} else {{");
+                    interpret(&nodes[2]);
+                    println!("}}");
+                }
+                "for" => {
+                    println!("for {} in {}..{} {{", nodes[0], nodes[1], nodes[2]);
+                    interpret(&nodes[3]);
+                    println!("}}");
+                }
+                "while" => {
+                    println!("while {} {{", nodes[0]);
+                    interpret(&nodes[1]);
+                    println!("}}");
+                }
+                "return" => {
+                    println!("return {};", nodes[0]);
+                }
+                _ => panic!("Unknown function"),
+            }
+        }
+        ASTNode::Number(num) => {
+            println!("{}", num);
+        }
+        ASTNode::Identifier(ident) => {
+            println!("{}", ident);
+        }
+        ASTNode::Operator(op) => {
+            println!("{}", op);
+        }
+        ASTNode::Keyword(kw) => {
+            println!("{}", kw);
+        }
+        ASTNode::String(s) => {
+            println!("{}", s);
+        }
+        ASTNode::Boolean(b) => {
+            println!("{}", b);
+        }
+        ASTNode::Int(i) => {
+            println!("{}", i);
+        }
+        ASTNode::Float(fl) => {
+            println!("{}", fl);
+        }
+        ASTNode::Void => {
+            println!("void");
+        }
+        ASTNode::SemiColon => {
+            println!(";");
+        }
+        ASTNode::EOF => {}
+    }
+}
 
 
