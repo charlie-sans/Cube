@@ -1,48 +1,16 @@
 // cube, a programming language that is inspired by Rust and Python
 
-//lexer for the cube programming language
+mod lexer;
 
-/*  
-example
-
-x: int = 5
-y:str = "hello"
-z:float = 5.5
-
-
-main:void(){
-    print(x);
-    print(y);
-    print(z);
-    for (i: int = 0; i < 10; i++){
-        print(i);
-        }
-        if (x === 5){
-            print("x is 5");
-            }
-            else{
-                print("x is not 5");
-                }
-    while (x < 10){
-        print(x);
-        x = x + 1;
-        }
-        
-    }
-    
-    
-    
-    */
-    //mod interpriter;
-    mod lexer;
-    pub mod token;
-    pub mod interpriter;
-pub mod parser;
-
+mod interpriter;
+pub mod token;
 
 use std::io::{self, Write};
 use std::fs::*;
 
+use interpriter::interpret;
+use lexer::{Lexer};
+use crate::token::Token;
 
 fn main() {
     let mut input = String::new();
@@ -64,15 +32,16 @@ fn main() {
         file = input;
     }
 
-    let lex = lexer::Lexer::new(&file);
-    let mut tokens = lexer::Lexer::lex(&mut lexer::Lexer::new(&file));
-    let mut parser = parser::Parser::new(&tokens);
-    let mut ast = parser.parse();
-    println!("{:?}", ast);
-    // let mut interpriter = interpriter::interpret(&ast);
-    // interpriter.interprit();
+    let lexer = Lexer::new(&file);
+    let mut tokens: Vec<Token> = Vec::new();
+    for token in lexer {        
+        if token == Token::Eof {
+            break;
+        }
+        println!("{:?}", token);
+        tokens.push(token);
+    }
+   // interpret(tokens);
 
-
-
-
+   
 }
