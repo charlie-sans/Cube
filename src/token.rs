@@ -1,14 +1,7 @@
 
 use std::{iter::Peekable, str::Chars};
-#[derive(Debug, PartialEq, Clone)]
-pub enum ASTNode {
-    Statement(Vec<ASTNode>),
-    Expression(String, Vec<ASTNode>),
-    Function(String, Vec<Token>,Vec<ASTNode>),
-    Varible(String, Vec<ASTNode>),
-    Class(String, Vec<ASTNode>),
 
-}
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -55,9 +48,6 @@ pub enum Token {
     Integer(i32),
     CFloat(f64),
     String(String),
-    Function(String, Vec<Token>,Vec<Token>),
-    Varible(String, Vec<Token>),
-    class(String, Vec<Token>),
     // End of file
     Eof,
 }
@@ -129,7 +119,7 @@ impl std::fmt::Display for Token {
             Token::Identifier(ident) => ident,
             Token::Integer(i) => &binding,
             Token::CFloat(f) => &binding,
-            _ => "Unknown",            
+            
             Token::String(s) => s,
             Token::Eof => "Eof",
         };
