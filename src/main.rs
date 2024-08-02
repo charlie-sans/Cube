@@ -20,6 +20,7 @@ fn main() {
     io::stdout().flush().unwrap();
     io::stdin().read_line(&mut input).unwrap();
 
+    
     // read the file contents
     if input.trim() == "run" {
         // read the next argument as the file name in the directory relative to the current directory
@@ -32,16 +33,26 @@ fn main() {
         file = input;
     }
 
+    
+
     let lexer = Lexer::new(&file);
     let mut tokens: Vec<Token> = Vec::new();
-    for token in lexer {        
+    for token in lexer { 
+        let mut i = 0;       
         if token == Token::Eof {
+            println!("EOF");
             break;
         }
-        println!("{:?}", token);
+        
+           i = i + 1;
+            println!("itteration from main {:?}",  i);
+            // print("cat"); print("catss");
+       
+        println!(" token from main {:?}", token);
         tokens.push(token);
     }
     println!("these are our tokens{:?}", tokens);
+    
     interpret(tokens);
 
    

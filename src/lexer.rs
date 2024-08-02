@@ -50,6 +50,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn read_identifier(&mut self, first_char: char) -> String {
+        // println!("read_identifier");
         let mut ident = String::new();
        
 
@@ -67,6 +68,7 @@ impl<'a> Lexer<'a> {
 
     fn read_number(&mut self, first_char: char) -> Token {
         let mut num_str = String::new();
+       // println!("read_number");
 
 
         while let Some(&c) = self.input.peek() {
@@ -87,45 +89,35 @@ impl<'a> Lexer<'a> {
         }
     }   
 
-    fn read_string(&mut self) -> String {
-        let mut str_literal = String::new();
-        self.input.next();
+   fn read_string(&mut self) -> String {
+    let mut str_literal = String::new();
+    self.input.next();
 
-        while let Some(c) = self.input.next() {
-            if c == '"' {
-                break;
-            } else {
-                str_literal.push(c);
-            }
+    while let Some(c) = self.input.next() {
+        if c != '"' {
+            str_literal.push(c);
+        } else {
+            break;
         }
-
-        str_literal
     }
+
+    str_literal
+}
+
 }
 
 impl<'a> Iterator for Lexer<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
+        
+       // println!("next");
+        
         while let Some(&c) = self.input.peek() {
-            if c == '\n' {
-                self.input.next();
-              
-            }
-            if c == '\r' {
-                self.input.next();
-               
-            }
-            if c == '\t' {
-                self.input.next();
-             
-            }
 
 
             match c {
-                ' ' | '\n' | '\t' => {
-                    self.input.next();
-                }
+              
                 '0'..='9' => {
                     return Some(self.read_number(c));
                 }

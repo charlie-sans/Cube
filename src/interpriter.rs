@@ -14,6 +14,7 @@ let mut variables = Vec::new();
  
 
     while i < tokens.len() {
+        println!("{}",i);
         println!("TOKEN {:?}", tokens[i]);
          match tokens[i] {
                 Token::NewLine => {

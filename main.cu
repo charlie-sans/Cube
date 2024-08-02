@@ -1,3 +1,5 @@
-a:int = 1;
 
-print(a);
+print("cat");
+print("cat");
+print("cat");  
+print("cat");
