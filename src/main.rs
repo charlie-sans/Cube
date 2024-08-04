@@ -7,20 +7,21 @@ pub mod token;
 
 use std::io::{self, Write};
 use std::fs::*;
-
 use interpriter::interpret;
 use lexer::{Lexer};
 use crate::token::Token;
-
+fn print_s(msg: &str, i: i32) {
+    println!("{}{}", msg, i);
+}
+fn print_s_token(msg: &str, token: Token) {
+    println!("{}{:?}", msg, token);
+}
 fn main() {
     let mut input = String::new();
     let mut file = String::new();
-
     print!("cube> ");
     io::stdout().flush().unwrap();
     io::stdin().read_line(&mut input).unwrap();
-
-    
     // read the file contents
     if input.trim() == "run" {
         // read the next argument as the file name in the directory relative to the current directory
@@ -32,26 +33,21 @@ fn main() {
     } else {
         file = input;
     }
-
-    
-
+    // create a lexer
     let lexer = Lexer::new(&file);
-    let mut tokens: Vec<Token> = Vec::new();
+    let mut tokens: Vec<Token> = Vec::new(); // create a vector to store the tokens
+    println!("these are our tokens {:?}", lexer);
     for token in lexer { 
-        let mut i = 0;       
-        if token == Token::Eof {
+        if &token == &Token::Eof {
             println!("EOF");
             break;
         }
-        
-           i = i + 1;
-            println!("itteration from main {:?}",  i);
-            // print("cat"); print("catss");
+            //print("cat"); print("catss");
        
-        println!(" token from main {:?}", token);
-        tokens.push(token);
+            tokens.push(token);
+    
     }
-    println!("these are our tokens{:?}", tokens);
+    //println!("these are our tokens{:?}", tokens);
     
     interpret(tokens);
 

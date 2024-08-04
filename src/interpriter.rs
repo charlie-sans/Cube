@@ -6,7 +6,7 @@ fn print_f(msg: &str) {
 //𓎢𓄿𓈖 𓇌𓅲 𓅲𓈖𓂧𓂋𓋴𓏏𓄿𓈖𓂧 𓅓?
 pub fn interpret(tokens: Vec<Token>) {
    let mut i = 0;
-let mut variables = Vec::new();
+    let mut variables = Vec::new();
    let mut objects: Vec<(String, String)> = Vec::new();
    let mut functions: Vec<(String, Vec<Token>)> = Vec::new();
    let mut classes: Vec<(String, Vec<Token>)> = Vec::new();
@@ -14,8 +14,8 @@ let mut variables = Vec::new();
  
 
     while i < tokens.len() {
-        println!("{}",i);
-        println!("TOKEN {:?}", tokens[i]);
+        //println!("{}",i);
+        //println!("TOKEN {:?}", tokens[i]);
          match tokens[i] {
                 Token::NewLine => {
                     i += 1;
@@ -126,7 +126,11 @@ let mut variables = Vec::new();
                 println!("FUCK {:?}", tokens[i]);
                 match tokens[i] {
                      Token::String(ref msg) => {
-                          print_f(msg);
+                        println!("AAAAAAAAAAA {}", tokens[i + 1]);
+                          match tokens[i + 2] {
+                            Token::Semicolon => {print_f(msg)},
+                            _ => print!("missing semicolon {}", msg)
+                          }
                      },
                      Token::Identifier(ref ident) => {
                         print_f(ident);
@@ -137,12 +141,13 @@ let mut variables = Vec::new();
                                 panic!("Identifier {:?} not found at line {}", tokens[i], i);
                             }
                      },
-                    
+                     
+                                  
                      _ => {
                           panic!("Expected a string or identifier after print {:?} at line {}", tokens[i], i);
                      }
-                     // should end with a right parenthesis
-                   
+                     
+
                 }
                 i += 1;
               },

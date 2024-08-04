@@ -37,7 +37,7 @@ use std::iter::Peekable;
 use std::str::Chars;
 
 use crate::Token;
-
+#[derive(Debug)]
 pub struct Lexer<'a> {
     input: Peekable<Chars<'a>>,
 }
@@ -243,12 +243,23 @@ impl<'a> Iterator for Lexer<'a> {
                             "for" => return Some(Token::For),
                             "print" => {
                                 self.input.next();
-                                return Some(Token::Print)
-                            
+                                while let Some(&c) = self.input.peek() {
+                                    if c != ';' {
+                                        self.input.next();
+                                    } else {
+                                     return Some(Token::Print);
+                                    }
+                                    
+                                  
+                                    println!("{}", self.input.peek().unwrap());
+                                }
+                                //self.input.next();
+                                // check if it ends with a semicolon
                             }
                             _ => return Some(Token::Identifier(ident)),
                         }
                     } else {
+                        self.input.next();
                         return None;
                     }
                 }
